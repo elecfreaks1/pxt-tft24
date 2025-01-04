@@ -1,9 +1,9 @@
-//% color=#008C8C icon="\uf26c"
+//% color=#008C8C icon="\uf26c" block="TFT24"
 namespace tft24 {
     /*****************************************************************************************************
      * I2C address 0x11
      ****************************************************************************************************/
-    const TFT_I2C_ADDR = 0x11;
+    const I2C_ADDR = 0x11;
 
     const CMD_SET_BACKLIGHT = 0x40;
     const CMD_DRAW_LINE = 0X10;
@@ -21,7 +21,7 @@ namespace tft24 {
     const CMD_DRAW_HISTOGRAM_DATA = 0xC1;
     const CMD_DRAW_PIE_CHART = 0xC2;
 
-    let current_row = 0;
+    let currentRow = 0;
 
     export enum BlkCmdEnum {
         //%block="open"
@@ -84,6 +84,14 @@ namespace tft24 {
         //% block="5"
         Chart5 = 5
     }
+
+    export enum DrawType {
+        //% block="Histogram"
+        Histogram = 0,
+        //% block="Linechart"
+        Linechart = 1
+    }
+
     
     //% blockHidden=1
     //% blockId=LineNumEnum block="%value"
@@ -102,14 +110,18 @@ namespace tft24 {
     export function selectChartNumGroup(value: ChartNumGroup): number {
         return value;
     }
-    
-    export enum DrawType {
-        //% block="Histogram"
-        Histogram = 0,
-        //% block="Linechart"
-        Linechart = 1
+
+    //% blockHidden=true
+    //% blockId=colorindexpicker  block="%color"
+    //% color.fieldEditor="colornumber"
+    //% color.fieldOptions.decompileLiterals = true
+    //% color.fieldOptions.valueMode="rgb"
+    //% color.fieldOptions.colours='["0x000000", "0xFFFFFF", "0xFF0000", "0x00FF00","0x0000FF", "0xFFFF00", "0xFF00FF", "0x00FFFF","0xC81D31", "0xEF949E", "0xF5B7BF", "0xFADBDF","0x249087", "0x7DDFD7","0xA9E9E4","0xD4F4F2","0x588E32","0xACD78E","0xC8E5B3","0xE3F2D9","0xB68C02","0xFED961","0xFEE695","0xFFF2CA","0xC65F10","0xF5B482","0xF8CDAC","0xFCE6D5","0x2E54A1","0x91ACE0","0xB6C7EA","0xDAE3F5","0x333F50","0x8497B0","0xADB9CA","0xD6DCE5", "0x767171","0xAFABAB","0xD0CECE","0xE7E6E6"]'
+    //% color.fieldOptions.columns=4
+    export function colorIndexPicker(color: number) {
+        return color;
     }
-    
+
     // coordinate
     export class DrawCoord {
         public x: number;
@@ -139,15 +151,15 @@ namespace tft24 {
     /**
      * 校准运行时间,防止屏还未初始化就调用函数
      */
-    function verify_runtime() {
+    function blockForTask() {
         let time = 0;
-        while (!pins.i2cReadNumber(TFT_I2C_ADDR, NumberFormat.Int8LE)) {
+        while (!pins.i2cReadNumber(I2C_ADDR, NumberFormat.Int8LE)) {
             time = input.runningTime() + 5;
             while (input.runningTime() < time) { }
         }
     }
     
-    function adjust_charcode(code: number): number {
+    function adjustCharcode(code: number): number {
         return code < 0x20 || code > 0x7F ? 0x20 : code;
     }
     
@@ -163,22 +175,22 @@ namespace tft24 {
         for (let i = 0; i < params.length; i++) {
             buff[i + 4] = params[i];
         }
-        pins.i2cWriteBuffer(TFT_I2C_ADDR, buff);
+        pins.i2cWriteBuffer(I2C_ADDR, buff);
     }
     
     //% block="set backlight %cmd"
     //% weight=100
     //% group="Basic"
-    export function tftBacklightCtrl(cmd: BlkCmdEnum) {
-        verify_runtime();
+    export function backlightCtrl(cmd: BlkCmdEnum) {
+        blockForTask();
         i2cCommandSend(CMD_SET_BACKLIGHT, [cmd == BlkCmdEnum.BlkOpen ? 0x01 : 0x00]);
     }
 
     //% block="clear screen"
     //% weight=98
     //% group="Basic"
-    export function tft_clear_screen() {
-        verify_runtime();
+    export function clearScreen() {
+        blockForTask();
         i2cCommandSend(CMD_CLEAR_SCREEN, [0]);
     }
 
@@ -194,11 +206,11 @@ namespace tft24 {
 
     //% block="set background color %color"
     //% color.shadow="colorindexpicker"
-    //% color.defl="#FFFFFF"
+    //% color.defl="0xFFFFFF"
     //% group="Basic"
     //% weight=96
-    export function tft_set_background_color(color: number) {
-        verify_runtime();
+    export function setBackgroundColor(color: number) {
+        blockForTask();
         i2cCommandSend(CMD_SET_BACKGROUND_COLOR, [
             (color >> 16) & 0xff,
             (color >> 8) & 0xff,
@@ -208,11 +220,11 @@ namespace tft24 {
 
     //% block="set draw pen color %color"
     //% color.shadow="colorindexpicker"
-    //% color.defl="#000000"
+    //% color.defl="0x000000"
     //% weight=95
     //% group="Basic"
-    export function tft_set_pen_color(color: number) {
-        verify_runtime();
+    export function setPenColor(color: number) {
+        blockForTask();
         i2cCommandSend(CMD_SET_PEN_COLOR, [
             (color >> 16) & 0xff,
             (color >> 8) & 0xff,
@@ -220,24 +232,15 @@ namespace tft24 {
         ]);
     }
 
-    //% blockId=colorindexpicker block="$index" blockHidden=true shim=TD_ID
-    //% index.fieldEditor="colornumber"
-    //% index.fieldOptions.valueMode="rgb"
-    //% index.fieldOptions.colours='["#000000", "#FFFFFF", "#FF0000", "#00FF00","#0000FF", "#FFFF00", "#FF00FF", "#00FFFF","#C81D31", "#EF949E", "#F5B7BF", "#FADBDF","#249087", "#7DDFD7","#A9E9E4","#D4F4F2","#588E32","#ACD78E","#C8E5B3","#E3F2D9","#B68C02","#FED961","#FEE695","#FFF2CA","#C65F10","#F5B482","#F8CDAC","#FCE6D5","#2E54A1","#91ACE0","#B6C7EA","#DAE3F5","#333F50","#8497B0","#ADB9CA","#D6DCE5", "#767171","#AFABAB","#D0CECE","#E7E6E6"]'
-    //% index.fieldOptions.columns=4
-    export function __colorIndexPicker(index: number) {
-        return index;
-    }
-
     // block="show string %str"
     // weight=94
     // group="Basic"
-    function tft_show_string(str: string) {
-        verify_runtime();
+    function showString(str: string) {
+        blockForTask();
         let arr = [];
-        arr.push(current_row);
+        arr.push(currentRow);
         for (let i = 0; i < str.length; i++) {
-            arr.push(adjust_charcode(str.charCodeAt(i)));
+            arr.push(adjustCharcode(str.charCodeAt(i)));
         }
         arr.push(0);
         i2cCommandSend(CMD_DRAW_STRING, arr);
@@ -247,55 +250,55 @@ namespace tft24 {
     // num.defl=20
     // weight=93
     // group="Basic"
-    function tft_show_num(num: number) {
+    function showNum(num: number) {
         let str = "" + num;
-        tft_show_string(str);
+        showString(str);
     }
 
     // block="Line breaks"
     // weight=91
     // group="Basic"
-    function tft_new_line() {
-        verify_runtime();
-        current_row = 0;
+    function newLine() {
+        blockForTask();
+        currentRow = 0;
     };
 
     //% block="select line %num=LineNumEnum and write string %str"
     //% weight=92
     //% group="Basic"
-    export function tft_select_line_write_string(num: number, str: string) {
-        verify_runtime();
-        current_row = num - 1;
-        tft_show_string(str);
+    export function selectLineWriteString(num: number, str: string) {
+        blockForTask();
+        currentRow = num - 1;
+        showString(str);
     };
 
     //% block="select line %num=LineNumEnum clear"
     //% weight=93
     //% group="Basic"
-    export function tft_select_line_clear(num: number) {
-        verify_runtime();
-        tft_select_line_write_string(num, "");
+    export function selectLineClear(num: number) {
+        blockForTask();
+        selectLineWriteString(num, "");
     };
 
     //% block="select line %num=LineNumEnum and write num %wnum"
     //% weight=90
     //% group="Basic"
-    export function tft_select_line_write_num(num: number, wnum: number) {
-        verify_runtime();
-        current_row = num - 1;
-        tft_show_num(wnum);
+    export function selectLineWriteNum(num: number, wnum: number) {
+        blockForTask();
+        currentRow = num - 1;
+        showNum(wnum);
     };
 
-    export function tft_clear_line(num: number) {
-        verify_runtime();
+    export function clearLine(num: number) {
+        blockForTask();
         i2cCommandSend(CMD_CLEAR_LINE, [num]);
     };
 
     //% block="select %coord=drawCoord|write string %str"
     //% weight=85
     //% group="Basic"
-    export function tft_select_coord_write_string(coord: DrawCoord, str: string) {
-        verify_runtime();
+    export function selectCoordWriteString(coord: DrawCoord, str: string) {
+        blockForTask();
         let arr = [
             coord.x >> 8 & 0xff,
             coord.x & 0xff,
@@ -303,7 +306,7 @@ namespace tft24 {
             coord.y & 0xff,
         ];
         for (let i = 0; i < str.length; i++) {
-            arr.push(adjust_charcode(str.charCodeAt(i)));
+            arr.push(adjustCharcode(str.charCodeAt(i)));
         }
         arr.push(0);
         i2cCommandSend(CMD_COORD_DRAW_STRING, arr);
@@ -312,18 +315,18 @@ namespace tft24 {
     //% block="select %coord=drawCoord|write num %num"
     //% weight=80
     //% group="Basic"
-    export function tft_select_coord_write_num(coord: DrawCoord, num: number) {
-        verify_runtime();
+    export function selectCoordWriteNum(coord: DrawCoord, num: number) {
+        blockForTask();
         let str = "" + num;
-        tft_select_coord_write_string(coord, str);
+        selectCoordWriteString(coord, str);
     };
 
     //% block="draw line |start %start=drawCoord|end %end=drawCoord"
     //% weight=55
     //% group="shape"
     //% inlineInputMode=external
-    export function tft_draw_line(start: DrawCoord, end: DrawCoord) {
-        verify_runtime();
+    export function drawLine(start: DrawCoord, end: DrawCoord) {
+        blockForTask();
         i2cCommandSend(CMD_DRAW_LINE, [
             start.x >> 8 & 0xff,
             start.x & 0xff,
@@ -341,8 +344,8 @@ namespace tft24 {
     //% weight=50
     //% group="shape"
     //% inlineInputMode=external
-    export function tft_draw_rect(start: DrawCoord, end: DrawCoord, fill: boolean) {
-        verify_runtime();
+    export function drawRect(start: DrawCoord, end: DrawCoord, fill: boolean) {
+        blockForTask();
         i2cCommandSend(CMD_DRAW_RECT, [
             start.x >> 8 & 0xff,
             start.x & 0xff,
@@ -360,8 +363,8 @@ namespace tft24 {
     //% weight=45
     //% group="shape"
     //% inlineInputMode=external
-    export function tft_draw_circle(cen: DrawCoord, r: number, fill: boolean) {
-        verify_runtime();
+    export function drawCircle(cen: DrawCoord, r: number, fill: boolean) {
+        blockForTask();
         i2cCommandSend(CMD_DRAW_CIRCLE, [
             cen.x >> 8 & 0xff,
             cen.x & 0xff,
@@ -375,11 +378,11 @@ namespace tft24 {
 
     //% block="draw a circular loadercolor  %color"
     //% color.shadow="colorindexpicker"
-    //% color.defl="#E7E6E6"
+    //% color.defl="0xE7E6E6"
     //% weight=40
     //% group="shape"
-    export function tft_draw_circular_loader(color: number) {
-        verify_runtime();
+    export function drawCircularLoader(color: number) {
+        blockForTask();
         //color RGB888位转RGB565
         i2cCommandSend(CMD_DRAW_CIRCULAR_LOADER, [
             color >> 16 & 0xff,
@@ -393,8 +396,8 @@ namespace tft24 {
     //% percent.min=0 percent.max=100
     //% weight=30
     //% group="shape"
-    export function tft_show_loading_bar(percent: number) {
-        verify_runtime();
+    export function showLoadingBar(percent: number) {
+        blockForTask();
         i2cCommandSend(CMD_DRAW_PROGRESS, [percent]);
     };
 
@@ -410,7 +413,7 @@ namespace tft24 {
     //% blockHidden=1
     //% blockId=createGroupInfo block="color %color label %name"
     //% color.shadow="colorindexpicker"
-    //% color.defl="#FF0000"
+    //% color.defl="0xFF0000"
     export function createGroupInfo(color: number, name: string): GroupInfo {
         return new GroupInfo(color, name);
     }
@@ -422,13 +425,13 @@ namespace tft24 {
     //% column.min=1 column.max=10
     //% group="chart"
     //% inlineInputMode=external
-    export function tft_draw_chart(drawtype: DrawType, yarray: DrawCoord, column: number,
+    export function drawChart(drawtype: DrawType, yarray: DrawCoord, column: number,
         group1: GroupInfo = null,
         group2: GroupInfo = null,
         group3: GroupInfo = null,
         group4: GroupInfo = null,
         group5: GroupInfo = null) {
-        verify_runtime();
+        blockForTask();
         let arr = [
             yarray.x >> 8 & 0xff,
             yarray.x & 0xff,
@@ -471,8 +474,8 @@ namespace tft24 {
     //% column.min=1 column.max=10
     //% group="chart"
     //% inlineInputMode=external
-    export function tft_draw_chart_data(column: number, name: string, num1: number, num2: number = null, num3: number = null, num4: number = null, num5: number = null) {
-        verify_runtime();
+    export function drawChartData(column: number, name: string, num1: number, num2: number = null, num3: number = null, num4: number = null, num5: number = null) {
+        blockForTask();
         let arr = [column & 0xFF];
         let nums = [num1, num2, num3, num4, num5];
         for (let i = 0; i < 5; i++) {
@@ -485,7 +488,7 @@ namespace tft24 {
             }
         }
         for (let i = 0; i < name.length; i++) {
-            arr.push(adjust_charcode(name.charCodeAt(i)));
+            arr.push(adjustCharcode(name.charCodeAt(i)));
         }
         arr.push(0);
         i2cCommandSend(CMD_DRAW_HISTOGRAM_DATA, arr)
@@ -505,7 +508,7 @@ namespace tft24 {
     //% blockHidden=1
     //% blockId=createPartInfo block="value %value label %name color %color"
     //% color.shadow="colorindexpicker"
-    //% color.defl="#FF0000"
+    //% color.defl="0xFF0000"
     export function createPartInfo(value: number, name: string, color: number): PartInfo {
         return new PartInfo(value, name, color);
     }
@@ -515,7 +518,7 @@ namespace tft24 {
     //% weight=10
     //% group="chart"
     //% inlineInputMode=external
-    export function draw_pie_chart(
+    export function drawPie(
         part1: PartInfo = null,
         part2: PartInfo = null,
         part3: PartInfo = null,
@@ -526,7 +529,7 @@ namespace tft24 {
         part8: PartInfo = null,
         part9: PartInfo = null,
         part10: PartInfo = null) {
-        verify_runtime();
+        blockForTask();
         let part_cnt = 0;
         let arr = [0];
         let part_arr = [part1, part2, part3, part4, part5, part6, part7, part8, part9, part10];
@@ -539,7 +542,7 @@ namespace tft24 {
             arr.push(part_arr[i].value & 0xff);
             let len = part_arr[i].name.length;
             for (let j = 0; j < (len > 6 ? 3 : len); j++) {
-                arr.push(adjust_charcode(part_arr[i].name.charCodeAt(j)));
+                arr.push(adjustCharcode(part_arr[i].name.charCodeAt(j)));
             }
             if (len > 6) {
                 arr.push(".".charCodeAt(0))

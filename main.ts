@@ -116,7 +116,7 @@ namespace tft24 {
     //% color.fieldEditor="colornumber"
     //% color.fieldOptions.decompileLiterals = true
     //% color.fieldOptions.valueMode="rgb"
-    //% color.fieldOptions.colours='["0x000000", "0xFFFFFF", "0xFF0000", "0x00FF00","0x0000FF", "0xFFFF00", "0xFF00FF", "0x00FFFF","0xC81D31", "0xEF949E", "0xF5B7BF", "0xFADBDF","0x249087", "0x7DDFD7","0xA9E9E4","0xD4F4F2","0x588E32","0xACD78E","0xC8E5B3","0xE3F2D9","0xB68C02","0xFED961","0xFEE695","0xFFF2CA","0xC65F10","0xF5B482","0xF8CDAC","0xFCE6D5","0x2E54A1","0x91ACE0","0xB6C7EA","0xDAE3F5","0x333F50","0x8497B0","0xADB9CA","0xD6DCE5", "0x767171","0xAFABAB","0xD0CECE","0xE7E6E6"]'
+    //% color.fieldOptions.colours='["#000000", "#FFFFFF", "#FF0000", "#00FF00","#0000FF", "#FFFF00", "#FF00FF", "#00FFFF","#C81D31", "#EF949E", "#F5B7BF", "#FADBDF","#249087", "#7DDFD7","#A9E9E4","#D4F4F2","#588E32","#ACD78E","#C8E5B3","#E3F2D9","#B68C02","#FED961","#FEE695","#FFF2CA","#C65F10","#F5B482","#F8CDAC","#FCE6D5","#2E54A1","#91ACE0","#B6C7EA","#DAE3F5","#333F50","#8497B0","#ADB9CA","#D6DCE5", "#767171","#AFABAB","#D0CECE","#E7E6E6"]'
     //% color.fieldOptions.columns=4
     export function colorIndexPicker(color: number) {
         return color;
@@ -206,7 +206,7 @@ namespace tft24 {
 
     //% block="set background color %color"
     //% color.shadow="colorindexpicker"
-    //% color.defl="0xFFFFFF"
+    //% color.defl="#FFFFFF"
     //% group="Basic"
     //% weight=96
     export function setBackgroundColor(color: number) {
@@ -220,7 +220,7 @@ namespace tft24 {
 
     //% block="set draw pen color %color"
     //% color.shadow="colorindexpicker"
-    //% color.defl="0x000000"
+    //% color.defl="#000000"
     //% weight=95
     //% group="Basic"
     export function setPenColor(color: number) {
@@ -378,7 +378,7 @@ namespace tft24 {
 
     //% block="draw a circular loadercolor  %color"
     //% color.shadow="colorindexpicker"
-    //% color.defl="0xE7E6E6"
+    //% color.defl="#E7E6E6"
     //% weight=40
     //% group="shape"
     export function drawCircularLoader(color: number) {
@@ -413,7 +413,7 @@ namespace tft24 {
     //% blockHidden=1
     //% blockId=createGroupInfo block="color %color label %name"
     //% color.shadow="colorindexpicker"
-    //% color.defl="0xFF0000"
+    //% color.defl="#FF0000"
     export function createGroupInfo(color: number, name: string): GroupInfo {
         return new GroupInfo(color, name);
     }
@@ -508,7 +508,7 @@ namespace tft24 {
     //% blockHidden=1
     //% blockId=createPartInfo block="value %value label %name color %color"
     //% color.shadow="colorindexpicker"
-    //% color.defl="0xFF0000"
+    //% color.defl="#FF0000"
     export function createPartInfo(value: number, name: string, color: number): PartInfo {
         return new PartInfo(value, name, color);
     }

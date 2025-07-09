@@ -10,7 +10,8 @@
     "files": [
         "README.md",
         "main.ts",
-        "_locales/zh/tft24-strings.json"
+        "_locales/zh/tft24-strings.json",
+        "_locales/pl/tft24-strings.json"
     ],
     "testFiles": [
         "test.ts"

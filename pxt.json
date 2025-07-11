@@ -1,6 +1,6 @@
 {
     "name": "tft24",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Elecfreask package for 2.4 Inch TFT controller",
     "license": "MIT",
     "dependencies": {
